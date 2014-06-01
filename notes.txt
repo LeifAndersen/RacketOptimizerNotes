@@ -14,3 +14,8 @@ From the documentation in eval.c:
     constant folding, and function inlining; this pass mutates records
     produced by the "letrec_check" pass. See "optimize.c".
 
+The bytecode optimizer uses `struct Optimize_Info`, which is initialized using `scheme_optimize_info_create`. `scheme_optimize_info_create()` will additionally set the `Comp_Prefix` and logger for the context.
+
+Once the `Optimize_Info` is created, `scheme_optimize_info_enforce_const()` set's the ``Optimize_info's `enforce_const`. Depending on the value of `comp_flags`, will use `scheme_optimize_info_never_inline()` to tell the optimizer to never do inlining.
+
+At the completion of these steps, the optimizer is ready to begin. The optimizer is defined in `scheme_optimize_expr()`, and takes the scheme object returned from the letrec_check step, the `Optimize_Info` defined previously, and a context, which is initially `0`.
