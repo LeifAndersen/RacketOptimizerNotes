@@ -1,21 +1,67 @@
+(Created by reading the source mainly in eval.c, optimize.c, and resolve.c, also with some feedback from Matthew Flatt.)
+
 There are two optimizers for racket. They are the bytecode optimize and the JIT optimizer. Typed racket adds an additional optimizer that runs before the bytecode optimizer.
 
 Bytecode compilation occurs in five passes, they are:
 
-1. compile
-2. letrec_check
-3. optimize
-4. resolve
-5. sfs
+    1. compile
+    2. letrec_check
+    3. optimize
+    4. resolve
+    5. sfs
 
-From the documentation in eval.c:
+The two interesting steps for optimization are optimize and resolve. At a high level optimize is responsible for constant folding/propagation, inlining, and variable propagation. The goal is to reduce overhead of function calls and closure creation. Resolve is responsible for more than just optimization. It is responsible for lambda lifting and closure conversion.
+
+From the documentation in `eval.c`:
 
     The third pass, called "optimize", performs constant propagation,
     constant folding, and function inlining; this pass mutates records
     produced by the "letrec_check" pass. See "optimize.c".
+
+    The fourth pass, called "resolve", finishes compilation by computing
+    variable offsets and indirections (often mutating the records
+    produced by the first pass). It is also responsible for closure
+    conversion (i.e., converting closure content to arguments) and
+    lifting (of procedures that close over nothing or only globals).
+    Beware that the resulting bytecode object is a graph, not a tree,
+    due to sharing (potentially cyclic) of closures that are "empty"
+    but actually refer to other "empty" closures. See "resolve.c".
 
 The bytecode optimizer uses `struct Optimize_Info`, which is initialized using `scheme_optimize_info_create`. `scheme_optimize_info_create()` will additionally set the `Comp_Prefix` and logger for the context.
 
 Once the `Optimize_Info` is created, `scheme_optimize_info_enforce_const()` set's the ``Optimize_info's `enforce_const`. Depending on the value of `comp_flags`, will use `scheme_optimize_info_never_inline()` to tell the optimizer to never do inlining.
 
 At the completion of these steps, the optimizer is ready to begin. The optimizer is defined in `scheme_optimize_expr()`, and takes the scheme object returned from the letrec_check step, the `Optimize_Info` defined previously, and a context, which is initially `0`.
+
+`scheme_optimize_expr()` first gets a `Scheme_Type` from `SCHEME_TYPE`, and performs its optimization based on the type. At a high level, the code for `scheme_optimize_expr()` is:
+
+    Scheme_Object *scheme_optimize_expr(Scheme_Object *expr, Optimize_Info *info, int context)
+    {
+      Scheme_Type type = SCHEME_TYPE(expr);
+      switch(type) {
+      case type1:
+         code for type1;
+      case tyep2:
+         code for type2;
+      ...
+     }
+
+Once `scheme_optimize` is finished, the optimized code is ready for the resolve stage. First, `scheme_do_eval()` calls `scheme_resolve_prefix()`, `scheme_resolve_info_create()`, `scheme_resolve_info_enforce_const`, and `scheme_enable_expression_resolve_lifts()` to setup the `Resolve_Info`, analogous to the optimize phase.
+
+`scheme_resolve_expr()` is the resolve step, which takes the optimized scheme expression and the `Resolve_Info`. The structure of the resolver is analogous to that of the optimizer. And thus the structure of the code is:
+
+    Scheme_Object *scheme_resolve_expr(Scheme_Object *expr, Resolve_Info *info)
+    {
+      Scheme_Type type = SCHEME_TYPE(expr);
+      switch(type) {
+      case type1:
+         code for type1;
+      case tyep2:
+         code for type2;
+      ...
+     }
+
+Once the resolver is finished, the resulting expression is passed onto the sfs stage.
+
+At a high level, the JIT optimizer works analogously to the bytecode optimizer. The main difference is that it inlines calls at the machine code level rather than at the bytecode level.
+
