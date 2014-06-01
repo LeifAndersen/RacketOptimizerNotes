@@ -1,0 +1,16 @@
+There are two optimizers for racket. They are the bytecode optimize and the JIT optimizer. Typed racket adds an additional optimizer that runs before the bytecode optimizer.
+
+Bytecode compilation occurs in five passes, they are:
+
+1. compile
+2. letrec_check
+3. optimize
+4. resolve
+5. sfs
+
+From the documentation in eval.c:
+
+    The third pass, called "optimize", performs constant propagation,
+    constant folding, and function inlining; this pass mutates records
+    produced by the "letrec_check" pass. See "optimize.c".
+
