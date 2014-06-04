@@ -1,0 +1,3 @@
+A few notes on how racket's optimizer works.
+
+The goal is to eventually put them in a coherent document, but they are currently a reflection of my understanding of the racket compilation process.
