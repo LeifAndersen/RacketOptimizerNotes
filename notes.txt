@@ -46,6 +46,32 @@ At the completion of these steps, the optimizer is ready to begin. The optimizer
       ...
      }
 
+The different types are:
+scheme_local_type
+scheme_application_type
+scheme_application2_type
+scheme_application3_type
+scheme_sequence_type
+scheme_splice_sequence_type
+scheme_branch_type
+scheme_with_cont_mark_type
+scheme_compiled_unclosed_procedure_type
+scheme_compiled_let_void_type
+scheme_compiled_toplevel_type
+scheme_compiled_quote_syntax_type
+scheme_variable_type
+scheme_module_variable_type
+scheme_define_values_type
+scheme_varref_form_type
+scheme_set_bang_type
+scheme_define_syntaxes_type
+scheme_begin_for_syntax_type
+scheme_case_lambda_sequence_type
+scheme_begin0_sequence_type
+scheme_apply_values_type
+scheme_require_form_type
+scheme_module_type
+
 Once `scheme_optimize` is finished, the optimized code is ready for the resolve stage. First, `scheme_do_eval()` calls `scheme_resolve_prefix()`, `scheme_resolve_info_create()`, `scheme_resolve_info_enforce_const`, and `scheme_enable_expression_resolve_lifts()` to setup the `Resolve_Info`, analogous to the optimize phase.
 
 `scheme_resolve_expr()` is the resolve step, which takes the optimized scheme expression and the `Resolve_Info`. The structure of the resolver is analogous to that of the optimizer. And thus the structure of the code is:
@@ -60,6 +86,8 @@ Once `scheme_optimize` is finished, the optimized code is ready for the resolve 
          code for type2;
       ...
      }
+
+The different types are the same as the optimizer types.
 
 Once the resolver is finished, the resulting expression is passed onto the sfs stage.
 
